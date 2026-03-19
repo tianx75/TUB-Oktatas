@@ -1,0 +1,343 @@
+// ══════════════════════════════════════════════════════
+// THE ULTIMATE BEAUTY — Quiz API v3
+// Fix: MailApp (megbízhatóbb web app-ban), egyenkénti hibakezelés
+// ══════════════════════════════════════════════════════
+
+const SHEET_NAME = "Quiz Eredmények";
+const LOG_SHEET = "Email Log";
+const CLINIC_EMAIL = "info@theultimatebeauty.net";
+const CLINIC_NAME = "The Ultimate Beauty";
+
+function doPost(e) {
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: "JSON parse: " + err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 1. Mentés a Sheetbe
+  try {
+    saveToSheet(data);
+  } catch(err) {
+    logError("Sheet mentés hiba", err, data);
+  }
+
+  // 2. Email a kitöltőnek (külön try/catch, nem blokkolja a többit)
+  if (data.email) {
+    try {
+      sendEmailToStaff(data);
+      logSuccess("Staff email elküldve", data.email, data);
+    } catch(err) {
+      logError("Staff email hiba: " + data.email, err, data);
+    }
+  }
+
+  // 3. Email a klinikának (külön try/catch)
+  try {
+    sendEmailToClinic(data);
+    logSuccess("Klinika email elküldve", CLINIC_EMAIL, data);
+  } catch(err) {
+    logError("Klinika email hiba", err, data);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ── SHEET MENTÉS ──
+function saveToSheet(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    const headers = [["Dátum", "Név", "Email", "Témakör", "Pontszám", "Max pont", "Százalék", "Átment?", "Kitöltési idő (mp)", "Részletes válaszok"]];
+    sheet.getRange(1, 1, 1, headers[0].length).setValues(headers);
+    sheet.getRange(1, 1, 1, headers[0].length).setFontWeight("bold");
+    sheet.setFrozenRows(1);
+  }
+
+  const pct = Math.round((data.score / data.total) * 100);
+  const passed = pct >= 70 ? "✓ IGEN" : "✗ NEM";
+
+  const details = (data.answers || []).map((a, i) =>
+    `${i+1}. ${a.correct ? "✓" : "✗"} ${a.question} → ${a.selected}`
+  ).join(" | ");
+
+  sheet.appendRow([
+    new Date(),
+    data.name || "—",
+    data.email || "—",
+    data.category || "HILEFT",
+    data.score,
+    data.total,
+    pct + "%",
+    passed,
+    data.duration || 0,
+    details
+  ]);
+}
+
+// ── ERROR / SUCCESS LOG ──
+function logError(msg, err, data) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let logSheet = ss.getSheetByName(LOG_SHEET);
+    if (!logSheet) {
+      logSheet = ss.insertSheet(LOG_SHEET);
+      logSheet.getRange(1,1,1,4).setValues([["Dátum","Típus","Üzenet","Részletek"]]);
+      logSheet.getRange(1,1,1,4).setFontWeight("bold");
+      logSheet.setFrozenRows(1);
+    }
+    logSheet.appendRow([new Date(), "HIBA", msg, err.toString() + " | " + (data.name || "")]);
+  } catch(e) { /* ha a log is hibázik, nincs mit tenni */ }
+}
+
+function logSuccess(msg, recipient, data) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let logSheet = ss.getSheetByName(LOG_SHEET);
+    if (!logSheet) {
+      logSheet = ss.insertSheet(LOG_SHEET);
+      logSheet.getRange(1,1,1,4).setValues([["Dátum","Típus","Üzenet","Részletek"]]);
+      logSheet.getRange(1,1,1,4).setFontWeight("bold");
+      logSheet.setFrozenRows(1);
+    }
+    logSheet.appendRow([new Date(), "OK", msg, recipient + " | " + (data.name || "")]);
+  } catch(e) {}
+}
+
+// ── EMAIL A KITÖLTŐNEK ──
+function sendEmailToStaff(data) {
+  const pct = Math.round((data.score / data.total) * 100);
+  const passed = pct >= 70;
+  const firstName = (data.name || "").split(" ").pop();
+
+  const subject = "TUB Tudásteszt: " + data.score + "/" + data.total + " (" + pct + "%) - " + (passed ? "TELJESÍTVE" : "Újra próbáld");
+
+  const html = buildStaffEmail(data, pct, passed, firstName);
+
+  MailApp.sendEmail({
+    to: data.email,
+    subject: subject,
+    htmlBody: html,
+    name: CLINIC_NAME,
+    replyTo: CLINIC_EMAIL
+  });
+}
+
+// ── EMAIL A KLINIKÁNAK ──
+function sendEmailToClinic(data) {
+  const pct = Math.round((data.score / data.total) * 100);
+  const passed = pct >= 70;
+
+  const subject = "TUB Quiz: " + data.name + " — " + data.score + "/" + data.total + " (" + pct + "%) - " + new Date().toLocaleDateString("hu-HU");
+
+  const html = buildClinicEmail(data, pct, passed);
+
+  MailApp.sendEmail({
+    to: CLINIC_EMAIL,
+    subject: subject,
+    htmlBody: html,
+    name: "TUB Quiz Rendszer",
+    replyTo: CLINIC_EMAIL
+  });
+}
+
+// ── STAFF EMAIL HTML ──
+function buildStaffEmail(data, pct, passed, firstName) {
+  var answers = (data.answers || []);
+  var correct = answers.filter(function(a){ return a.correct; }).length;
+  var wrong = answers.filter(function(a){ return !a.correct; }).length;
+
+  var answerRows = "";
+  for (var i = 0; i < answers.length; i++) {
+    var a = answers[i];
+    var bgColor = a.correct ? '#0a2a0a' : '#2a0a0a';
+    var fgColor = a.correct ? '#5dba7e' : '#e87070';
+    var icon = a.correct ? '✓' : '✗';
+    var correctInfo = "";
+    if (!a.correct) {
+      var correctText = a.correctAnswer || a.correctLetter || '—';
+      correctInfo = '<span style="color:#e87070;"> · Helyes: ' + correctText + '</span>';
+    }
+    answerRows += '<tr>' +
+      '<td style="padding:10px 12px;border-bottom:1px solid #2a2a2a;color:#999;font-size:13px;width:28px;text-align:center;">' +
+        '<span style="display:inline-block;width:22px;height:22px;border-radius:50%;background:' + bgColor + ';color:' + fgColor + ';font-size:11px;line-height:22px;text-align:center;">' + icon + '</span>' +
+      '</td>' +
+      '<td style="padding:10px 12px;border-bottom:1px solid #2a2a2a;color:#aaa;font-size:12px;line-height:1.5;">' +
+        '<strong style="color:#d4cfc8;display:block;margin-bottom:3px;">' + (i+1) + '. ' + a.question + '</strong>' +
+        'Válaszod: ' + a.selected +
+        correctInfo +
+      '</td>' +
+    '</tr>';
+  }
+
+  var displayName = firstName || data.name || '';
+  var passLabel = passed ? 'Teljesítve' : 'Nem teljesítve';
+  var passTag = passed ? '✓ SIKERES' : '✗ NEM FELELT MEG';
+  var passBg = passed ? '#0a2a0a' : '#2a0a0a';
+  var passFg = passed ? '#5dba7e' : '#e87070';
+  var passBorder = passed ? '#1a4a1a' : '#4a1a1a';
+  var dur = data.duration || '—';
+  var dateStr = new Date().toLocaleDateString("hu-HU");
+
+  var retryBlock = '';
+  if (!passed) {
+    retryBlock = '<tr><td style="background:#1a1000;border:1px solid #3a2a00;border-radius:0;padding:16px 36px;">' +
+      '<p style="margin:0;font-size:13px;color:#aa8833;line-height:1.6;">' +
+      '<strong style="color:#e8b860;">Fejlesztési lehetőség:</strong> Nézd át újra a protokollt, különösen a téves válaszok témaköreit, majd próbáld újra a tesztet.' +
+      '</p></td></tr>';
+  }
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+  '<body style="margin:0;padding:0;background:#0e0e0e;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;">' +
+  '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:40px 20px;"><tr><td align="center">' +
+  '<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">' +
+
+  '<tr><td style="background:#141414;border-radius:12px 12px 0 0;padding:32px 36px 28px;text-align:center;border-bottom:1px solid #c9a96e;">' +
+    '<p style="margin:0 0 4px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#c9a96e;font-weight:500;">The Ultimate Beauty</p>' +
+    '<h1 style="margin:0;font-family:Georgia,serif;font-size:26px;font-weight:300;color:#f5f0e8;line-height:1.2;">Heti <em style="color:#c9a96e;font-style:italic;">Tudásteszt</em></h1>' +
+    '<p style="margin:8px 0 0;font-size:11px;color:#555;letter-spacing:0.08em;text-transform:uppercase;">Eredmény visszaigazolás</p>' +
+  '</td></tr>' +
+
+  '<tr><td style="background:#1c1c1c;padding:32px 36px;text-align:center;border-bottom:1px solid #2a2a2a;">' +
+    '<p style="margin:0 0 4px;font-size:12px;color:#777;">Szia, <strong style="color:#d4cfc8;">' + displayName + '</strong>!</p>' +
+    '<div style="margin:20px 0 16px;">' +
+      '<span style="font-family:Georgia,serif;font-size:72px;font-weight:300;color:#f5f0e8;line-height:1;">' + data.score + '</span>' +
+      '<span style="font-family:Georgia,serif;font-size:28px;color:#444;">/' + data.total + '</span>' +
+    '</div>' +
+    '<p style="margin:0 0 16px;font-size:14px;color:#c9a96e;letter-spacing:0.06em;">' + pct + '% — ' + passLabel + '</p>' +
+    '<span style="display:inline-block;padding:6px 20px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;background:' + passBg + ';color:' + passFg + ';border:1px solid ' + passBorder + ';">' + passTag + '</span>' +
+    '<p style="margin:16px 0 0;font-size:11px;color:#444;">Helyes: ' + correct + ' · Hibás: ' + wrong + ' · Kitöltési idő: ' + dur + ' mp</p>' +
+  '</td></tr>' +
+
+  '<tr><td style="background:#181818;padding:0 36px 8px;">' +
+    '<p style="margin:24px 0 12px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#c9a96e;font-weight:600;">Részletes válaszok</p>' +
+    '<table width="100%" cellpadding="0" cellspacing="0">' + answerRows + '</table>' +
+  '</td></tr>' +
+
+  retryBlock +
+
+  '<tr><td style="background:#141414;border-radius:0 0 12px 12px;padding:24px 36px;text-align:center;border-top:1px solid #2a2a2a;">' +
+    '<p style="margin:0 0 4px;font-size:11px;color:#444;">The Ultimate Beauty Boutique Clinic</p>' +
+    '<p style="margin:0;font-size:11px;color:#333;">1124 Budapest, Németvölgyi út 68. · ' + dateStr + '</p>' +
+  '</td></tr>' +
+
+  '</table></td></tr></table></body></html>';
+}
+
+// ── CLINIC EMAIL HTML ──
+function buildClinicEmail(data, pct, passed) {
+  var answers = (data.answers || []);
+  var correct = answers.filter(function(a){ return a.correct; }).length;
+
+  var answerRows = "";
+  for (var i = 0; i < answers.length; i++) {
+    var a = answers[i];
+    var color = a.correct ? '#5dba7e' : '#e87070';
+    var icon = a.correct ? '✓' : '✗';
+    var wrongInfo = "";
+    if (!a.correct) {
+      wrongInfo = '<span style="color:#e87070;"> → Válasz: ' + a.selected + '</span>';
+    }
+    answerRows += '<tr><td style="padding:8px 12px;border-bottom:1px solid #2a2a2a;color:#999;font-size:12px;">' +
+      '<span style="color:' + color + ';">' + icon + '</span>' +
+      ' ' + (i+1) + '. ' + a.question +
+      wrongInfo +
+    '</td></tr>';
+  }
+
+  var passTag = passed ? '✓ TELJESÍTVE' : '✗ NEM FELELT MEG';
+  var passBg = passed ? '#0a2a0a' : '#2a0a0a';
+  var passFg = passed ? '#5dba7e' : '#e87070';
+  var passBorder = passed ? '#1a4a1a' : '#4a1a1a';
+  var dur = data.duration || '—';
+  var dateStr = new Date().toLocaleString("hu-HU");
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head>' +
+  '<body style="margin:0;padding:0;background:#0e0e0e;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;">' +
+  '<table width="100%" cellpadding="0" cellspacing="0" style="background:#0e0e0e;padding:40px 20px;"><tr><td align="center">' +
+  '<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;">' +
+
+  '<tr><td style="background:#141414;border-radius:12px 12px 0 0;padding:24px 36px;border-bottom:1px solid #c9a96e;">' +
+    '<p style="margin:0 0 2px;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#c9a96e;">TUB · Belső értesítő</p>' +
+    '<h2 style="margin:0;font-family:Georgia,serif;font-size:22px;font-weight:300;color:#f5f0e8;">Új tesztkitöltés érkezett</h2>' +
+  '</td></tr>' +
+
+  '<tr><td style="background:#1c1c1c;padding:24px 36px;border-bottom:1px solid #2a2a2a;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0">' +
+      '<tr>' +
+        '<td width="50%" style="padding-bottom:12px;">' +
+          '<p style="margin:0 0 3px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#555;">Alkalmazott</p>' +
+          '<p style="margin:0;font-size:14px;font-weight:500;color:#d4cfc8;">' + (data.name || '—') + '</p>' +
+        '</td>' +
+        '<td width="50%" style="padding-bottom:12px;">' +
+          '<p style="margin:0 0 3px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#555;">Email</p>' +
+          '<p style="margin:0;font-size:13px;color:#888;">' + (data.email || '—') + '</p>' +
+        '</td>' +
+      '</tr>' +
+      '<tr>' +
+        '<td width="50%">' +
+          '<p style="margin:0 0 3px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#555;">Eredmény</p>' +
+          '<p style="margin:0;font-size:20px;font-family:Georgia,serif;font-weight:300;color:#f5f0e8;">' + data.score + '/' + data.total + ' <span style="font-size:14px;color:#c9a96e;">' + pct + '%</span></p>' +
+        '</td>' +
+        '<td width="50%">' +
+          '<p style="margin:0 0 3px;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#555;">Státusz</p>' +
+          '<span style="display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;background:' + passBg + ';color:' + passFg + ';border:1px solid ' + passBorder + ';">' + passTag + '</span>' +
+        '</td>' +
+      '</tr>' +
+    '</table>' +
+  '</td></tr>' +
+
+  '<tr><td style="background:#181818;padding:12px 36px;border-bottom:1px solid #2a2a2a;">' +
+    '<p style="margin:0;font-size:11px;color:#555;">' +
+      'Témakör: <span style="color:#888;">' + (data.category || 'HILEFT') + '</span> · ' +
+      'Helyes: <span style="color:#5dba7e;">' + correct + '</span> · ' +
+      'Hibás: <span style="color:#e87070;">' + (data.total - correct) + '</span> · ' +
+      'Idő: <span style="color:#888;">' + dur + ' mp</span> · ' +
+      '<span style="color:#666;">' + dateStr + '</span>' +
+    '</p>' +
+  '</td></tr>' +
+
+  '<tr><td style="background:#181818;padding:0 36px 16px;">' +
+    '<p style="margin:20px 0 10px;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#c9a96e;font-weight:600;">Válaszok áttekintése</p>' +
+    '<table width="100%" cellpadding="0" cellspacing="0">' + answerRows + '</table>' +
+  '</td></tr>' +
+
+  '<tr><td style="background:#141414;border-radius:0 0 12px 12px;padding:20px 36px;text-align:center;border-top:1px solid #2a2a2a;">' +
+    '<p style="margin:0;font-size:11px;color:#333;">The Ultimate Beauty · TUB Quiz Rendszer · Automatikus értesítő</p>' +
+  '</td></tr>' +
+
+  '</table></td></tr></table></body></html>';
+}
+
+// ── TESZT FUNCTION (futtasd manuálisan a jogosultságokhoz) ──
+function testEmailSending() {
+  var testData = {
+    name: "Teszt Felhasználó",
+    email: CLINIC_EMAIL,
+    score: 8,
+    total: 10,
+    duration: 120,
+    category: "HILEFT",
+    answers: [
+      {question: "Teszt kérdés 1", selected: "A válasz", correct: true, correctLetter: "A"},
+      {question: "Teszt kérdés 2", selected: "B válasz", correct: false, correctLetter: "C"}
+    ]
+  };
+
+  sendEmailToStaff(testData);
+  sendEmailToClinic(testData);
+  Logger.log("Teszt emailek elküldve: " + CLINIC_EMAIL);
+}
+
+function doGet(e) {
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: "TUB Quiz API v3 active", timestamp: new Date().toISOString() }))
+    .setMimeType(ContentService.MimeType.JSON);
+}

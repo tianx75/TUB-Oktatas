@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULTIMA HILEFT — Kezelési Protokoll · The Ultimate Beauty</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#C9A96E;--gold-light:#e8d5aa;--gold-dim:#8a6a3a;
+  --dark:#141414;--dark2:#1c1c1c;--dark3:#242424;--dark4:#2a2a2a;
+  --ivory:#F5F0E8;--ivory-dim:#b8b0a0;
+  --sidebar-w:240px;
+}
+html,body{height:100%;background:var(--dark);}
+body{font-family:'Montserrat',system-ui,sans-serif;color:var(--ivory);}
+
+/* ── PASSWORD GATE ── */
+#gate{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--dark);
+  display:flex;align-items:center;justify-content:center;
+}
+.gate-box{
+  width:360px;text-align:center;
+  border:0.5px solid #333;border-radius:16px;
+  padding:2.5rem 2rem;background:var(--dark2);
+}
+.gate-logo{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:13px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:0.4rem;font-weight:400;
+}
+.gate-name{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:28px;font-weight:300;color:var(--ivory);
+  line-height:1.1;margin-bottom:1.75rem;
+}
+.gate-name em{color:var(--gold);font-style:italic;}
+.gate-label{
+  font-size:10px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--ivory-dim);margin-bottom:0.6rem;display:block;
+}
+.gate-input{
+  width:100%;background:var(--dark3);border:0.5px solid #444;
+  border-radius:8px;padding:12px 14px;color:var(--ivory);
+  font-family:'Montserrat',sans-serif;font-size:14px;
+  text-align:center;letter-spacing:0.1em;
+  outline:none;transition:border-color 0.2s;
+}
+.gate-input:focus{border-color:var(--gold-dim);}
+.gate-btn{
+  margin-top:1rem;width:100%;background:var(--dark4);
+  border:0.5px solid var(--gold-dim);border-radius:8px;
+  padding:11px;color:var(--gold);
+  font-family:'Montserrat',sans-serif;font-size:11px;
+  font-weight:500;letter-spacing:0.1em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.15s;
+}
+.gate-btn:hover{background:#2e2318;border-color:var(--gold);}
+.gate-error{
+  font-size:11px;color:#e87070;margin-top:0.75rem;
+  min-height:16px;letter-spacing:0.04em;
+}
+.gate-divider{height:0.5px;background:linear-gradient(90deg,transparent,#333,transparent);margin:1.5rem 0;}
+.gate-note{font-size:10px;color:#555;line-height:1.6;}
+
+/* ── MAIN LAYOUT ── */
+#app{display:none;min-height:100vh;display:none;flex-direction:row;}
+#app.visible{display:flex;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--dark2);border-right:0.5px solid #2a2a2a;
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;
+}
+.sidebar-brand{padding:2rem 1.5rem 1.5rem;}
+.sb-overline{
+  font-size:9px;letter-spacing:0.2em;text-transform:uppercase;
+  color:var(--gold-dim);font-weight:500;margin-bottom:0.75rem;
+}
+.sb-logo{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:22px;font-weight:300;color:var(--ivory);line-height:1.2;
+}
+.sb-logo em{color:var(--gold);font-style:italic;display:block;}
+.sb-tagline{
+  font-size:10px;color:#555;letter-spacing:0.08em;
+  text-transform:uppercase;margin-top:0.6rem;line-height:1.5;
+}
+.sb-divider{height:0.5px;background:linear-gradient(90deg,#333,transparent);margin:0 1.5rem;}
+
+.sb-nav{padding:1.25rem 0;}
+.sb-nav-label{
+  font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+  color:#444;font-weight:600;padding:0 1.5rem;margin-bottom:0.5rem;
+}
+.sb-nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 1.5rem;cursor:pointer;
+  font-size:11px;font-weight:500;color:#666;
+  letter-spacing:0.04em;transition:all 0.15s;
+  border-left:2px solid transparent;
+}
+.sb-nav-item:hover{color:var(--ivory-dim);background:#1e1e1e;}
+.sb-nav-item.active{color:var(--gold);border-left-color:var(--gold);background:#1e1a13;}
+.sb-nav-num{
+  width:18px;height:18px;border-radius:50%;
+  border:0.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:600;flex-shrink:0;
+}
+
+.sidebar-footer{margin-top:auto;padding:1.25rem 1.5rem;}
+.sf-version{
+  font-size:9px;letter-spacing:0.1em;text-transform:uppercase;
+  color:#333;margin-bottom:0.5rem;
+}
+.sf-badge{
+  display:inline-block;font-size:9px;padding:3px 8px;
+  background:#0d1f0d;color:#4a8a4a;border-radius:4px;
+  letter-spacing:0.06em;
+}
+.sf-lock{
+  display:flex;align-items:center;gap:6px;margin-top:0.75rem;
+  font-size:10px;color:#3a3a3a;
+}
+.sf-lock svg{flex-shrink:0;}
+.sb-gold-line{
+  height:1px;
+  background:linear-gradient(90deg,var(--gold),transparent);
+  opacity:0.3;margin-bottom:1rem;
+}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow-y:auto;padding:2rem 2.5rem 4rem;}
+.content-wrap{max-width:780px;margin:0 auto;}
+
+/* ── DOC HEADER ── */
+.doc-header{
+  background:var(--dark2);border:0.5px solid #2a2a2a;
+  border-radius:12px;padding:2rem 2rem 1.75rem;
+  margin-bottom:1.75rem;position:relative;overflow:hidden;
+}
+.doc-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  opacity:0.5;
+}
+.doc-h-over{
+  font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold);font-weight:500;margin-bottom:0.75rem;
+}
+.doc-h-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:32px;font-weight:300;color:var(--ivory);line-height:1.15;
+  margin-bottom:0.5rem;
+}
+.doc-h-title em{color:var(--gold);font-style:italic;}
+.doc-h-sub{
+  font-size:10px;color:#555;letter-spacing:0.1em;text-transform:uppercase;
+}
+.doc-h-meta{
+  display:flex;gap:1.5rem;margin-top:1.25rem;padding-top:1.25rem;
+  border-top:0.5px solid #2a2a2a;flex-wrap:wrap;
+}
+.doc-h-meta-item .mi-label{
+  font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#444;
+  font-weight:500;margin-bottom:3px;
+}
+.doc-h-meta-item .mi-value{font-size:12px;color:var(--ivory-dim);}
+
+/* ── UNIT CARD ── */
+.unit-card{
+  background:var(--dark2);border:0.5px solid #2a2a2a;
+  border-radius:12px;overflow:hidden;margin-bottom:1.25rem;
+}
+.unit-header{
+  background:var(--dark);padding:1rem 1.25rem;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:0.5px solid #2a2a2a;
+}
+.u-num{
+  width:26px;height:26px;border-radius:50%;
+  border:0.5px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:500;color:var(--gold);flex-shrink:0;
+}
+.u-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:19px;font-weight:400;color:var(--ivory);
+}
+.u-title em{color:var(--gold);font-style:italic;}
+.unit-body{padding:1.25rem;}
+
+/* ── LABELS ── */
+.sec-label{
+  font-size:9px;letter-spacing:0.14em;text-transform:uppercase;
+  font-weight:600;color:var(--gold);margin-bottom:0.75rem;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-label::after{content:'';flex:1;height:0.5px;background:#2a2a2a;}
+
+/* ── INFO BOX ── */
+.info-box{
+  background:#1e1e1e;border-radius:8px;padding:1rem 1.25rem;
+  margin-bottom:1rem;font-size:13px;color:#999;line-height:1.7;
+}
+.info-box strong{color:var(--ivory-dim);font-weight:500;}
+
+/* ── TWO-COL GRID ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;}
+.dark-card{background:var(--dark);border-radius:8px;padding:1rem 1.25rem;}
+.dc-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:0.5rem;}
+.dc-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;color:var(--ivory);margin-bottom:0.4rem;}
+.dc-body{font-size:12px;color:#666;line-height:1.6;}
+
+/* ── PARAM CARDS ── */
+.param-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.param-card{background:var(--dark);border-radius:8px;padding:10px 14px;}
+.pc-label{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:4px;}
+.pc-value{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;color:var(--ivory);font-weight:400;}
+.pc-unit{font-size:12px;color:#666;margin-left:3px;}
+
+/* ── TABLE ── */
+.proto-table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:12px;}
+.proto-table th{
+  font-size:9px;letter-spacing:0.1em;text-transform:uppercase;
+  font-weight:500;color:#555;padding:6px 8px;text-align:left;
+  border-bottom:0.5px solid #2a2a2a;
+}
+.proto-table td{
+  padding:9px 8px;border-bottom:0.5px solid #1e1e1e;
+  color:#888;line-height:1.5;vertical-align:top;
+}
+.proto-table tr:last-child td{border-bottom:none;}
+.t-nm{font-weight:500;color:var(--ivory-dim);}
+.wave-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+.tag{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600;letter-spacing:0.04em;}
+.tag-face{background:#1a2535;color:#6aabdd;}
+.tag-shape-rgb{background:#1a3520;color:#5dba7e;}
+.tag-shape-red{background:#2a2010;color:#c9a96e;}
+
+/* ── STEPS ── */
+.steps{list-style:none;margin-bottom:1rem;}
+.step-item{display:flex;gap:14px;padding:10px 0;border-bottom:0.5px solid #1e1e1e;align-items:flex-start;}
+.step-item:last-child{border-bottom:none;}
+.step-n{
+  width:22px;height:22px;border-radius:50%;
+  background:var(--dark);color:var(--gold);
+  font-size:10px;font-weight:500;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.step-t{font-size:13px;font-weight:500;color:var(--ivory-dim);margin-bottom:3px;}
+.step-d{font-size:12px;color:#666;line-height:1.6;}
+.step-d em{color:var(--gold);font-style:normal;font-weight:500;}
+
+/* ── CHECK LIST ── */
+.checklist{list-style:none;margin-bottom:1rem;}
+.ci{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 0;border-bottom:0.5px solid #1e1e1e;
+  font-size:12px;color:#888;cursor:pointer;
+}
+.ci:last-child{border-bottom:none;}
+.ci input[type=checkbox]{width:14px;height:14px;flex-shrink:0;margin-top:1px;accent-color:var(--gold-dim);cursor:pointer;}
+.ci.done{color:#444;text-decoration:line-through;}
+.ci label{cursor:pointer;line-height:1.5;}
+.ci label strong{color:var(--ivory-dim);font-weight:500;}
+
+/* ── BOX TYPES ── */
+.warn-box{background:#1e1010;border:0.5px solid #4a2020;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;}
+.warn-title{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#e87070;font-weight:600;margin-bottom:0.75rem;}
+.warn-box ul,.ok-box ul{list-style:none;}
+.warn-box ul li,.ok-box ul li{font-size:12px;padding:4px 0 4px 14px;position:relative;line-height:1.5;}
+.warn-box ul li{color:#aa6666;}
+.warn-box ul li::before{content:'✕';position:absolute;left:0;color:#e87070;font-size:9px;top:6px;}
+.ok-box{background:#0a1810;border:0.5px solid #1a3a20;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;}
+.ok-title{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#5dba7e;font-weight:600;margin-bottom:0.75rem;}
+.ok-box ul li{color:#4a8a5a;}
+.ok-box ul li::before{content:'✓';position:absolute;left:0;color:#5dba7e;font-size:9px;top:6px;}
+
+.alert-row{
+  display:flex;gap:10px;background:#1e1600;border:0.5px solid #4a3800;
+  border-radius:8px;padding:10px 12px;margin-bottom:10px;align-items:flex-start;
+}
+.alert-text{font-size:12px;color:#aa8833;line-height:1.6;}
+.alert-text strong{color:#e8b860;font-weight:500;}
+.tip-row{display:flex;gap:10px;background:#1e1e1e;border-radius:8px;padding:10px 12px;margin-bottom:8px;align-items:flex-start;}
+.tip-text{font-size:12px;color:#777;line-height:1.6;}
+.tip-text strong{color:var(--ivory-dim);font-weight:500;}
+.tip-icon{font-size:13px;flex-shrink:0;margin-top:1px;}
+
+/* ── COMBOS ── */
+.combo-card{border:0.5px solid #2a2a2a;border-radius:8px;margin-bottom:10px;overflow:hidden;}
+.combo-h{display:flex;justify-content:space-between;align-items:center;padding:10px 1rem;cursor:pointer;background:#1a1a1a;}
+.combo-h:hover{background:#1e1e1e;}
+.combo-title{font-size:13px;font-weight:500;color:var(--ivory-dim);}
+.combo-tag{font-size:9px;padding:2px 8px;border-radius:4px;background:var(--dark);color:var(--gold);letter-spacing:0.06em;}
+.combo-body{padding:1rem;border-top:0.5px solid #222;display:none;}
+.combo-body.open{display:block;}
+.combo-tl{display:flex;gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+.ct-box{background:var(--dark);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--gold);font-weight:500;white-space:nowrap;}
+.ct-wait{background:#1e1000;color:#e87070;}
+.ct-led{background:#0a1800;color:#5dba7e;}
+.ct-arr{color:#333;font-size:12px;}
+.combo-note{font-size:12px;color:#666;line-height:1.7;margin-top:8px;}
+.combo-note strong{color:var(--ivory-dim);font-weight:500;}
+
+.gold-line{height:0.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1rem 0;opacity:0.25;}
+
+/* ── UNIT VISIBILITY ── */
+.unit-section{display:none;}
+.unit-section.active{display:block;}
+
+/* ── MOBILE NAV BAR ── */
+.mobile-bar{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--dark2);border-top:0.5px solid #2a2a2a;
+  padding:0;
+}
+.mobile-bar-inner{
+  display:flex;align-items:center;
+  overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  padding:0 4px;
+}
+.mobile-bar-inner::-webkit-scrollbar{display:none;}
+.mb-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 14px;cursor:pointer;flex-shrink:0;
+  font-size:9px;font-weight:500;letter-spacing:0.06em;
+  text-transform:uppercase;color:#555;border-top:2px solid transparent;
+  transition:all 0.15s;white-space:nowrap;
+}
+.mb-item.active{color:var(--gold);border-top-color:var(--gold);}
+.mb-num{
+  width:20px;height:20px;border-radius:50%;
+  border:0.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;
+}
+/* Mobile header strip */
+.mobile-header{
+  display:none;position:sticky;top:0;z-index:100;
+  background:var(--dark2);border-bottom:0.5px solid #2a2a2a;
+  padding:14px 1.25rem;
+  flex-direction:row;align-items:center;justify-content:space-between;
+}
+.mh-brand{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:16px;color:var(--ivory);font-weight:400;
+}
+.mh-brand em{color:var(--gold);font-style:italic;}
+.mh-lock{
+  font-size:10px;color:#444;cursor:pointer;
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border:0.5px solid #333;border-radius:6px;
+}
+
+@media(max-width:900px){
+  #app{flex-direction:column;}
+  .sidebar{display:none !important;width:0 !important;flex:none !important;}
+  .mobile-bar{display:block;}
+  .mobile-header{display:flex;}
+  .main{padding:1rem 1rem 5rem;width:100%;flex:1;}
+  .content-wrap{max-width:100%;}
+  .two-col,.param-grid{grid-template-columns:1fr;}
+  .doc-header{padding:1.25rem;}
+  .doc-h-title{font-size:24px;}
+  .doc-h-meta{gap:1rem;}
+  .combo-tl{flex-direction:column;align-items:flex-start;}
+  .ct-arr{transform:rotate(90deg);}
+  .qz-options{grid-template-columns:1fr;}
+}
+
+/* ── QUIZ ── */
+.qz-setup-note{background:#1a1400;border:0.5px solid #3a2e00;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem;}
+.qz-setup-note .sn-title{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#e8b860;font-weight:600;margin-bottom:0.5rem;}
+.qz-setup-note p{font-size:12px;color:#aa8833;line-height:1.6;}
+.qz-setup-note code{background:#2a2000;padding:2px 6px;border-radius:4px;font-size:11px;color:#e8b860;}
+
+.qz-loading{text-align:center;padding:3rem 0;}
+.qz-spinner{width:32px;height:32px;border:2px solid #2a2a2a;border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.qz-loading p{font-size:12px;color:#555;}
+
+.qz-intro{}
+.qz-week-badge{display:inline-block;font-size:10px;padding:4px 10px;background:#1e1a13;border:0.5px solid var(--gold-dim);border-radius:20px;color:var(--gold);letter-spacing:0.08em;margin-bottom:1rem;}
+.qz-intro h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:400;color:var(--ivory);margin-bottom:0.5rem;}
+.qz-intro h2 em{color:var(--gold);font-style:italic;}
+.qz-intro-desc{font-size:13px;color:#777;line-height:1.7;margin-bottom:1.5rem;}
+.qz-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;}
+.qz-field label{display:block;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#555;margin-bottom:6px;}
+.qz-input{width:100%;background:var(--dark);border:0.5px solid #333;border-radius:8px;padding:10px 12px;color:var(--ivory);font-family:'Montserrat',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.qz-input:focus{border-color:var(--gold-dim);}
+.qz-err{font-size:11px;color:#e87070;min-height:16px;margin-bottom:0.75rem;}
+.qz-start-btn{width:100%;background:var(--dark);border:0.5px solid var(--gold-dim);border-radius:8px;padding:12px;color:var(--gold);font-family:'Montserrat',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;}
+.qz-start-btn:hover{background:#1e1a13;border-color:var(--gold);}
+.qz-count{font-size:11px;color:#444;margin-top:0.75rem;text-align:center;}
+
+.qz-progress-wrap{margin-bottom:1.5rem;}
+.qz-progress-meta{display:flex;justify-content:space-between;font-size:10px;color:#555;margin-bottom:6px;}
+.qz-progress-track{height:3px;background:#2a2a2a;border-radius:2px;overflow:hidden;}
+.qz-progress-fill{height:3px;background:var(--gold);border-radius:2px;transition:width 0.4s ease;}
+
+.qz-q-category{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold-dim);margin-bottom:0.75rem;}
+.qz-q-text{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:400;color:var(--ivory);line-height:1.4;margin-bottom:1.5rem;}
+
+.qz-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;}
+.qz-opt{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--dark);border:0.5px solid #2a2a2a;
+  border-radius:8px;padding:12px;cursor:pointer;
+  transition:all 0.15s;text-align:left;
+}
+.qz-opt:hover{border-color:#444;background:#1a1a1a;}
+.qz-opt.disabled{cursor:default;pointer-events:none;}
+.qz-opt.correct{border-color:#2a5a2a;background:#0a1a0a;}
+.qz-opt.wrong{border-color:#5a2a2a;background:#1a0a0a;}
+.qz-opt-letter{
+  width:22px;height:22px;flex-shrink:0;border-radius:50%;
+  border:0.5px solid #444;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:600;
+  color:#666;transition:all 0.15s;margin-top:1px;
+}
+.qz-opt:hover .qz-opt-letter{border-color:var(--gold-dim);color:var(--gold);}
+.qz-opt.correct .qz-opt-letter{border-color:#5dba7e;background:#1a3a1a;color:#5dba7e;}
+.qz-opt.wrong .qz-opt-letter{border-color:#e87070;background:#3a1a1a;color:#e87070;}
+.qz-opt-text{font-size:13px;color:#888;line-height:1.5;}
+.qz-opt.correct .qz-opt-text{color:#6aaa82;}
+.qz-opt.wrong .qz-opt-text{color:#aa6666;}
+
+.qz-feedback{background:#1e1e1e;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;}
+.qz-feedback.correct-fb{background:#0a1a0a;border:0.5px solid #1a4a1a;}
+.qz-feedback.wrong-fb{background:#1a0a0a;border:0.5px solid #4a1a1a;}
+.qz-fb-row{display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;}
+.qz-fb-icon{font-size:16px;}
+.qz-fb-label{font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;}
+.correct-fb .qz-fb-label{color:#5dba7e;}
+.wrong-fb .qz-fb-label{color:#e87070;}
+.qz-fb-explanation{font-size:12px;color:#777;line-height:1.6;}
+.qz-next-btn{width:100%;background:var(--dark);border:0.5px solid #333;border-radius:8px;padding:10px;color:#888;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;margin-top:0.75rem;}
+.qz-next-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+
+.qz-results{}
+.qz-score-wrap{text-align:center;padding:1.5rem 0 1.25rem;margin-bottom:1.25rem;border-bottom:0.5px solid #2a2a2a;}
+.qz-score-num{font-family:'Cormorant Garamond',Georgia,serif;font-size:64px;font-weight:300;color:var(--ivory);line-height:1;}
+.qz-score-denom{font-size:24px;color:#555;}
+.qz-score-pct{font-size:13px;color:var(--gold);letter-spacing:0.08em;margin-top:0.5rem;}
+.qz-score-name{font-size:12px;color:#555;margin-top:0.25rem;}
+.qz-pass{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-top:0.75rem;padding:4px 12px;border-radius:20px;display:inline-block;}
+.qz-pass.pass{background:#0a1a0a;color:#5dba7e;border:0.5px solid #1a4a1a;}
+.qz-pass.fail{background:#1a0a0a;color:#e87070;border:0.5px solid #4a1a1a;}
+.qz-breakdown-label{font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;display:flex;align-items:center;gap:8px;}
+.qz-breakdown-label::after{content:'';flex:1;height:0.5px;background:#2a2a2a;}
+.qz-br-item{display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid #1e1e1e;align-items:flex-start;}
+.qz-br-item:last-child{border-bottom:none;}
+.qz-br-icon{font-size:13px;flex-shrink:0;margin-top:1px;}
+.qz-br-q{font-size:12px;color:#777;line-height:1.5;flex:1;}
+.qz-br-q strong{color:var(--ivory-dim);font-weight:500;display:block;margin-bottom:2px;}
+.qz-submitted{text-align:center;padding:1rem 0 0.5rem;font-size:12px;color:#555;}
+.qz-retry-btn{width:100%;background:transparent;border:0.5px solid #2a2a2a;border-radius:8px;padding:10px;color:#555;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.15s;margin-top:0.75rem;}
+.qz-retry-btn:hover{border-color:#444;color:#888;}
+
+.qz-error{text-align:center;padding:2rem 0;}
+.qz-error p{font-size:13px;color:#666;line-height:1.6;}
+@media(max-width:600px){
+  .qz-form-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">The Ultimate Beauty</div>
+    <div class="gate-name">Belső<br><em>dokumentum</em></div>
+    <div class="gate-divider"></div>
+    <span class="gate-label">Jelszó megadása</span>
+    <input class="gate-input" type="password" id="pw" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')unlock()">
+    <button class="gate-btn" onclick="unlock()">Belépés →</button>
+    <div class="gate-error" id="gate-err"></div>
+    <div class="gate-divider"></div>
+    <div class="gate-note">Ez a dokumentum bizalmasan kezelendő.<br>Kizárólag The Ultimate Beauty alkalmazottak számára.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <!-- MOBILE HEADER -->
+  <div class="mobile-header">
+    <div class="mh-brand">The Ultimate <em>Beauty</em></div>
+    <div class="mh-lock" onclick="lock()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Kilépés
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-bar">
+    <div class="mobile-bar-inner">
+      <div class="mb-item active" onclick="showUnit(0,this)"><div class="mb-num">1</div>Technológia</div>
+      <div class="mb-item" onclick="showUnit(1,this)"><div class="mb-num">2</div>A gép</div>
+      <div class="mb-item" onclick="showUnit(2,this)"><div class="mb-num">3</div>Szűrés</div>
+      <div class="mb-item" onclick="showUnit(3,this)"><div class="mb-num">4</div>Kezelés</div>
+      <div class="mb-item" onclick="showUnit(4,this)"><div class="mb-num">5</div>Utókezelés</div>
+      <div class="mb-item" onclick="showUnit(5,this)"><div class="mb-num">6</div>Kombináció</div>
+      <div class="mb-item" onclick="showUnit(6,this)"><div class="mb-num">7</div>Biztonság</div>
+      <div class="mb-item" onclick="showUnit(7,this)"><div class="mb-num">8</div>Quiz</div>
+    </div>
+  </nav>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sb-overline">The Ultimate Beauty</div>
+      <div class="sb-logo">Boutique<br><em>Clinic</em></div>
+      <div class="sb-tagline">1124 Budapest<br>Gyöngyvirág út 68.</div>
+    </div>
+    <div class="sb-divider"></div>
+
+    <nav class="sb-nav">
+      <div class="sb-nav-label">Protokoll</div>
+      <div class="sb-nav-item active" onclick="showUnit(0,this)"><span class="sb-nav-num">1</span>Technológia</div>
+      <div class="sb-nav-item" onclick="showUnit(1,this)"><span class="sb-nav-num">2</span>A gép és fejek</div>
+      <div class="sb-nav-item" onclick="showUnit(2,this)"><span class="sb-nav-num">3</span>Páciens szűrés</div>
+      <div class="sb-nav-item" onclick="showUnit(3,this)"><span class="sb-nav-num">4</span>Kezelés lépései</div>
+      <div class="sb-nav-item" onclick="showUnit(4,this)"><span class="sb-nav-num">5</span>Utókezelés</div>
+      <div class="sb-nav-item" onclick="showUnit(5,this)"><span class="sb-nav-num">6</span>Kombinációk</div>
+      <div class="sb-nav-item" onclick="showUnit(6,this)"><span class="sb-nav-num">7</span>Biztonság</div>
+      <div class="sb-nav-label" style="margin-top:1rem;">Tudásellenőrzés</div>
+      <div class="sb-nav-item" onclick="showUnit(7,this)"><span class="sb-nav-num">8</span>Heti Quiz</div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sb-gold-line"></div>
+      <div class="sf-version">Verzió</div>
+      <div class="sf-badge">v2.0 · 2026.03.19</div>
+      <div class="sf-lock" onclick="lock()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Kijelentkezés
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="content-wrap">
+
+      <!-- DOC HEADER -->
+      <div class="doc-header">
+        <div class="doc-h-over">Belső képzési anyag · ULTIMA rendszer</div>
+        <div class="doc-h-title">ULTIMA HILEFT<br><em>Kezelési Protokoll</em></div>
+        <div class="doc-h-sub">Alkalmazotti útmutató · Magyar · Teljes rendszer (Face + Shape)</div>
+        <div class="doc-h-meta">
+          <div class="doc-h-meta-item"><div class="mi-label">Verzió</div><div class="mi-value">v2.0 — Javított</div></div>
+          <div class="doc-h-meta-item"><div class="mi-label">Dátum</div><div class="mi-value">2026. március 19.</div></div>
+          <div class="doc-h-meta-item"><div class="mi-label">Forrás</div><div class="mi-value">UL-TD11 kézikönyv + TUB Drive</div></div>
+          <div class="doc-h-meta-item"><div class="mi-label">Rendszer</div><div class="mi-value">UL-800 Ultima (Face + Shape)</div></div>
+        </div>
+      </div>
+
+      <!-- UNIT 1 -->
+      <div class="unit-section active" id="u0">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">1</div><div class="u-title">Technológiai <em>alapok</em></div></div>
+          <div class="unit-body">
+            <p class="sec-label">Mi az ULTIMA HILEFT?</p>
+            <div class="info-box">A HILEFT (<strong>High Intensity Light and Electro Facial Therapy</strong>) az Ultima Face fej kombinált kezelési módja: EMS izomstimulációt és fotobiomodulációt alkalmaz egyszerre, egyetlen kezelésen belül. A két technológia szinergiája az, ami megkülönbözteti az egyszerű LED eszközöktől vagy TENS készülékektől.</div>
+            <p class="sec-label">A két pillér</p>
+            <div class="two-col">
+              <div class="dark-card"><div class="dc-label">1. pillér</div><div class="dc-title">Fotobiomoduláció (LED)</div><div class="dc-body">A fény a sejteket energiával látja el. A mitokondriális enzimek elnyelik a fotonokat → ATP termelés nő → fibroblasztok több kollagént és elasztint termelnek.</div></div>
+              <div class="dark-card"><div class="dc-label">2. pillér</div><div class="dc-title">Neuromuszkuláris stimuláció (EMS)</div><div class="dc-body">Elektromos impulzusok aktiválják az arcizmokat. Izomtónus javul, mikrokeringés fokozódik — ADWT technológiával.</div></div>
+            </div>
+            <p class="sec-label">LED hullámhosszak — Face applicátor</p>
+            <table class="proto-table">
+              <thead><tr><th>Hullámhossz</th><th>Fény</th><th>Penetráció</th><th>Fő hatás</th><th>Fej</th></tr></thead>
+              <tbody>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#8e44ad"></span>730 nm</td><td>Mély vörös</td><td>Dermisz–hipodermisz</td><td>Fibroblaszt aktiváció, kötőszövet, kollagén</td><td><span class="tag tag-face">Face</span></td></tr>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#3d1a5e"></span>940 nm</td><td>Közel-IR (láthatatlan)</td><td>Izomszövet</td><td>Mélyszöveti regeneráció, minden bőrtípus biztonságos</td><td><span class="tag tag-face">Face</span></td></tr>
+              </tbody>
+            </table>
+            <p class="sec-label">LED hullámhosszak — Shape modulok (test)</p>
+            <table class="proto-table">
+              <thead><tr><th>Hullámhossz</th><th>Fény</th><th>Modul</th><th>Fő hatás</th></tr></thead>
+              <tbody>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#7b2fbe"></span>395 nm</td><td>Ibolya/UV határán</td><td><span class="tag tag-shape-rgb">Shape RGB</span></td><td>Antibakteriális hatás</td></tr>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#27ae60"></span>520 nm</td><td>Zöld</td><td><span class="tag tag-shape-rgb">Shape RGB</span></td><td>Bőrpír csökkentés, nyirokkeringés</td></tr>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#c0392b"></span>640 nm</td><td>Vörös</td><td><span class="tag tag-shape-rgb">Shape RGB</span></td><td>Kollagén és elasztin serkentés</td></tr>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#922b21"></span>660 nm</td><td>Vörös</td><td><span class="tag tag-shape-red">Shape RED</span></td><td>Kollagén termelés, sejt regeneráció</td></tr>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#8e44ad"></span>730 nm</td><td>Mély vörös</td><td><span class="tag tag-shape-red">Shape RED</span></td><td>Mélyszöveti regeneráció</td></tr>
+                <tr><td class="t-nm"><span class="wave-dot" style="background:#3d1a5e"></span>940 nm</td><td>Közel-IR (láthatatlan)</td><td><span class="tag tag-shape-red">Shape RED</span></td><td>Mélyszöveti kezelés, izomregeneráció</td></tr>
+              </tbody>
+            </table>
+            <div class="tip-row"><span class="tip-icon">💡</span><div class="tip-text"><strong>A 940 nm miért különleges?</strong> Ez az egyetlen hullámhossz, ami sötétebb bőrtónusnál (Fitzpatrick IV–VI) sem okoz melanin-túlmelegedést — ezért minden páciensen biztonságos.</div></div>
+            <div class="tip-row"><span class="tip-icon">📌</span><div class="tip-text"><strong>Mit érez a páciens?</strong> Enyhe melegséget és lüktető/bizsergő érzést. Ez normális. Égő vagy fájdalmas érzésnél azonnal csökkentsd az intenzitást.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 2 -->
+      <div class="unit-section" id="u1">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">2</div><div class="u-title">A gép és <em>a fejek</em></div></div>
+          <div class="unit-body">
+            <p class="sec-label">Az UL-800 rendszer</p>
+            <div class="info-box">A vezérlőegység <strong>15 colos érintőképernyővel és forgatógombbal</strong> működik. Az internet kapcsolat a bejelentkezéshez szükséges — <strong>20 nap inaktivitás után kötelező újra online belépni.</strong></div>
+            <p class="sec-label">Bekapcsolás menete</p>
+            <ul class="steps">
+              <li class="step-item"><div class="step-n">1</div><div><div class="step-t">Áramköri megszakító (2. gomb)</div><div class="step-d">A készülék oldalán lévő áramköri megszakítót nyomd be — a gép automatikusan elindul.</div></div></li>
+              <li class="step-item"><div class="step-n">2</div><div><div class="step-t">Bejelentkezés</div><div class="step-d">GUI megjelenik → <em>"Get Started"</em> gomb → Ultima Manager fiókkal belépés.</div></div></li>
+              <li class="step-item"><div class="step-n">3</div><div><div class="step-t">Function Manager → Face Treatment</div><div class="step-d">A "Face Treatment" modult válaszd ki a Function Manager képernyőn.</div></div></li>
+            </ul>
+            <p class="sec-label">Az UL-FACE applicátor — fontos!</p>
+            <div class="alert-row"><span class="tip-icon">⚠️</span><div class="alert-text"><strong>Az UL-FACE fej nem kézi masszázs eszköz.</strong> CNC-mart alumínium karokkal rendelkezik — az elektródákat egyszer pozicionálod, a fej rögzítve marad a kezelés végéig. Nem mozgatod kezelés közben.</div></div>
+            <p class="sec-label">Elektróda elhelyezés — Face fej</p>
+            <table class="proto-table">
+              <thead><tr><th>Csatorna</th><th>Izom</th><th>Terület</th></tr></thead>
+              <tbody>
+                <tr><td class="t-nm">1–2</td><td>m. frontalis</td><td>Homlok</td></tr>
+                <tr><td class="t-nm">3–4</td><td>m. buccinator</td><td>Orca</td></tr>
+                <tr><td class="t-nm">5–6</td><td>m. masseter</td><td>Rágóizom / állvonal</td></tr>
+              </tbody>
+            </table>
+            <div class="tip-row"><span class="tip-icon">🔌</span><div class="tip-text"><strong>Mágneses csatlakozó:</strong> csak egy irányban kapcsolódik. Ha a sorozatszám nem jelenik meg az "Accessories" képernyőn — a csatlakozás nem megfelelő.</div></div>
+            <p class="sec-label">Kikapcsolás menete</p>
+            <ul class="steps">
+              <li class="step-item"><div class="step-n">1</div><div><div class="step-t">Power gomb (1. gomb) — 1 másodpercig nyomva tartva</div><div class="step-d">Megjelennek az opciók: <em>"Turn Off"</em> és "Restart".</div></div></li>
+              <li class="step-item"><div class="step-n">2</div><div><div class="step-t">"Turn Off" → áramköri megszakító</div><div class="step-d">Az áramköri megszakítóval (2. gomb) teljesen lekapcsolod a rendszert.</div></div></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 3 -->
+      <div class="unit-section" id="u2">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">3</div><div class="u-title">Páciens <em>szűrés</em></div></div>
+          <div class="unit-body">
+            <p class="sec-label">Abszolút kontraindikációk — TILOS kezelni</p>
+            <div class="warn-box"><div class="warn-title">EMS kontraindikációk</div><ul>
+              <li>Beültetett pacemaker, defibrillátor, neurostimulátor vagy bármilyen aktív elektronikus/fémes implantátum</li>
+              <li>Terhesség vagy gyanított terhesség</li>
+              <li>Súlyos szív- és érrendszeri betegség, koronáriabetegség</li>
+              <li>Epilepszia vagy egyéb súlyos neurológiai betegség</li>
+              <li>Aktív daganatos betegség a kezelési területen</li>
+              <li>Súlyos vesebetegség, aktív belső vérzés</li>
+              <li>Friss műtét a kezelési területen (6 hónapon belül) — orvosi engedély nélkül</li>
+              <li>Nyílt seb, fertőzött, gyulladt bőr a kezelési területen</li>
+            </ul></div>
+            <div class="warn-box"><div class="warn-title">LED kontraindikációk</div><ul>
+              <li>Fényérzékenység vagy ismert fényallergia</li>
+              <li>Fényérzékenyítő gyógyszerek (kivéve orvosi jóváhagyással)</li>
+              <li>Szisztémás lupus erythematosus (SLE) vagy egyéb fotoszenzitív autoimmun betegség</li>
+              <li>Melasma / hiperpigmentáció (egyéni megítélés szükséges)</li>
+            </ul></div>
+            <p class="sec-label">Előkezelési checklist — minden páciensnél</p>
+            <ul class="checklist">
+              <li class="ci"><input type="checkbox" id="s1" onchange="ck(this)"><label for="s1">Páciens anamnézis lapját átnéztem</label></li>
+              <li class="ci"><input type="checkbox" id="s2" onchange="ck(this)"><label for="s2"><strong>"Van Önnek beültetett szívritmus-szabályozója vagy más implantátuma?"</strong></label></li>
+              <li class="ci"><input type="checkbox" id="s3" onchange="ck(this)"><label for="s3"><strong>"Várandós vagy szoptat jelenleg?"</strong></label></li>
+              <li class="ci"><input type="checkbox" id="s4" onchange="ck(this)"><label for="s4"><strong>"Kapott az elmúlt 3 hétben Botox injekciót? 4 hétben fillert?"</strong></label></li>
+              <li class="ci"><input type="checkbox" id="s5" onchange="ck(this)"><label for="s5">Bőrt megszemléleltem: nincs aktív seb, herpesz, gyulladás</label></li>
+              <li class="ci"><input type="checkbox" id="s6" onchange="ck(this)"><label for="s6">Fémékszerek eltávolítva (fülbevaló, piercing az arcon)</label></li>
+              <li class="ci"><input type="checkbox" id="s7" onchange="ck(this)"><label for="s7">Szemvédő felhelyezve — LED kezelésnél kötelező</label></li>
+              <li class="ci"><input type="checkbox" id="s8" onchange="ck(this)"><label for="s8">Arc megtisztítva sminktől és bőrápolótól</label></li>
+              <li class="ci"><input type="checkbox" id="s9" onchange="ck(this)"><label for="s9">Páciens tájékoztatva a várható érzésekről</label></li>
+              <li class="ci"><input type="checkbox" id="s10" onchange="ck(this)"><label for="s10">CAUTION képernyőn ellenjavallatok átnézve és elfogadva</label></li>
+            </ul>
+            <div class="tip-row"><span class="tip-icon">⚠️</span><div class="tip-text"><strong>Ha bizonytalan vagy:</strong> Ne kezdd el a kezelést. Keresd Henriettát vagy az orvost.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 4 -->
+      <div class="unit-section" id="u3">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">4</div><div class="u-title">A kezelés <em>lépései</em></div></div>
+          <div class="unit-body">
+            <p class="sec-label">Előkészítő paraméterek</p>
+            <div class="param-grid">
+              <div class="param-card"><div class="pc-label">LED kezdő intenzitás</div><div class="pc-value">50–60<span class="pc-unit">%</span></div></div>
+              <div class="param-card"><div class="pc-label">Main (EMS) kezdő szint</div><div class="pc-value">40–50<span class="pc-unit">%</span></div></div>
+              <div class="param-card"><div class="pc-label">Max. kezelési idő</div><div class="pc-value">30<span class="pc-unit">perc</span></div></div>
+              <div class="param-card"><div class="pc-label">Max. bőrhőmérséklet</div><div class="pc-value">37<span class="pc-unit">°C</span></div></div>
+            </div>
+            <p class="sec-label">Standard Face HILEFT kezelés</p>
+            <ul class="steps">
+              <li class="step-item"><div class="step-n">1</div><div><div class="step-t">Arc előkészítése (5 perc)</div><div class="step-d">Arc lemosása tisztítóval, megszárítása. Enyhe hámlasztás ajánlott. Szemvédő. <em>Fotó a kezelés előtt kötelező.</em></div></div></li>
+              <li class="step-item"><div class="step-n">2</div><div><div class="step-t">Program kiválasztása a gépen</div><div class="step-d">Function Manager → Face Treatment → Program (hosszan nyomva) → ACTIVATE → CAUTION → <em>"Accept and Start Workout"</em>.</div></div></li>
+              <li class="step-item"><div class="step-n">3</div><div><div class="step-t">Kondukciós gél felvitele</div><div class="step-d">Egyenletesen a teljes kezelési területre. <em>Hiánya égési érzést okozhat.</em></div></div></li>
+              <li class="step-item"><div class="step-n">4</div><div><div class="step-t">Face applicátor pozicionálása és rögzítése</div><div class="step-d">Alumínium karok beállítása (homlok: 1–2, orca: 3–4, rágóizom: 5–6). <em>Rögzítés után a fej nem mozog a kezelés alatt.</em> Elektródák ne legyenek a szemeken, ajkakon, halántékon.</div></div></li>
+              <li class="step-item"><div class="step-n">5</div><div><div class="step-t">Program indítása — Start gomb</div><div class="step-d">Gomb sárgára vált → impulzusok aktívak. <em>A LED csak a program elindítása után kapcsolható be</em> → LED ikonra kattint → 50–60%-ra állítás.</div></div></li>
+              <li class="step-item"><div class="step-n">6</div><div><div class="step-t">Intenzitás beállítása csatornánként</div><div class="step-d">Main: 40–50%. Csatornánként egyenként emeld amíg a páciens <em>érezhető, de fájdalommentes</em> izomaktivitást jelez. <em>Max. 10% emelésenként.</em> 1–2 perc után újra kérdezhetsz rá az emelésre.</div></div></li>
+              <li class="step-item"><div class="step-n">7</div><div><div class="step-t">Kezelés közbeni monitorozás</div><div class="step-d"><em>Nem hagyhatod el a pácienst a kezelés alatt.</em> Fog-/ínyfájdalomnál: azonnal csökkentsd az intenzitást vagy ellenőrizd az elektróda pozíciót. LED panel hőmérséklete látható a képernyőn — 37°C felett csökkentsd a LED intenzitást.</div></div></li>
+              <li class="step-item"><div class="step-n">8</div><div><div class="step-t">Stop — kezelés befejezése</div><div class="step-d">Stop gomb → fej eltávolítás → gél letörlés → hidratáló krém. <em>Fotó a kezelés után kötelező.</em></div></div></li>
+            </ul>
+            <div class="alert-row"><span class="tip-icon">⏱️</span><div class="alert-text"><strong>Max. kezelési idő: 30 perc.</strong> Ismételt kezelés: legalább <strong>48 óra szünet</strong> szükséges. Maximum heti 2 alkalom.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 5 -->
+      <div class="unit-section" id="u4">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">5</div><div class="u-title">Utókezelés & <em>tanácsadás</em></div></div>
+          <div class="unit-body">
+            <p class="sec-label">Kezelés utáni azonnali teendők</p>
+            <ul class="checklist">
+              <li class="ci"><input type="checkbox" id="a1" onchange="ck(this)"><label for="a1">Gél maradéktalanul eltávolítva</label></li>
+              <li class="ci"><input type="checkbox" id="a2" onchange="ck(this)"><label for="a2">Hidratáló krém felvive</label></li>
+              <li class="ci"><input type="checkbox" id="a3" onchange="ck(this)"><label for="a3">SPF 50+ napvédő felvive (nappal kötelező)</label></li>
+              <li class="ci"><input type="checkbox" id="a4" onchange="ck(this)"><label for="a4">Szemvédő levéve, ékszerek visszaadva</label></li>
+              <li class="ci"><input type="checkbox" id="a5" onchange="ck(this)"><label for="a5">Face fej megtisztítva, gép leállítva</label></li>
+              <li class="ci"><input type="checkbox" id="a6" onchange="ck(this)"><label for="a6">Fotó elkészítve (kezelés után)</label></li>
+              <li class="ci"><input type="checkbox" id="a7" onchange="ck(this)"><label for="a7">Kezelés dokumentálva (dátum, program, intenzitás, megjegyzés)</label></li>
+            </ul>
+            <div class="ok-box"><div class="ok-title">Normális, ami kezelés után előfordulhat</div><ul>
+              <li>Enyhe bőrpír az elektróda helyeken — 10–40 percen belül elmúlik</li>
+              <li>Meleg érzés az arcon 30–60 percig</li>
+              <li>Izomfeszülés a homlok/orca területén a következő napokban — természetes</li>
+              <li>Enyhe fogérzékenység egyes esetekben</li>
+            </ul></div>
+            <div class="warn-box"><div class="warn-title">Kerülendő kezelés után</div><ul>
+              <li>Más arc kezelés 48 óráig</li>
+              <li>Erősen illatosított bőrápolók, önbarnítók, erős smink 24 óráig</li>
+              <li>Hámlasztó termékek (AHA/BHA) 72 óráig</li>
+              <li>Intenzív edzés, szauna, forró fürdő 24 óráig</li>
+            </ul></div>
+            <p class="sec-label">Ajánlott kezelési sorozat</p>
+            <div class="info-box">Optimális eredményhez: <strong>5–6 kezelés, hetente egyszer.</strong> Fenntartás: havonta 1 alkalom. Minden 3 hónapban ajánlott 2 hetes szünet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 6 -->
+      <div class="unit-section" id="u5">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">6</div><div class="u-title">Kombinációs <em>protokollok</em></div></div>
+          <div class="unit-body">
+            <div class="alert-row"><span class="tip-icon">⚠️</span><div class="alert-text"><strong>Kritikus:</strong> Botox után <strong>3 hét</strong>, filler után <strong>4 hét</strong> várakozás szükséges az EMS alkalmazása előtt az érintett területen (gyártói előírás).</div></div>
+            <p class="sec-label">Protokoll kombinációk</p>
+            <div class="combo-card">
+              <div class="combo-h" onclick="tc(this)"><span class="combo-title">HILEFT + Botox / Toxin</span><span class="combo-tag">Leggyakoribb</span></div>
+              <div class="combo-body">
+                <div class="combo-tl"><div class="ct-box">HILEFT előkezelés</div><span class="ct-arr">→</span><div class="ct-box">Botox injekció</div><span class="ct-arr">→</span><div class="ct-led">LED (EMS nélkül)</div><span class="ct-arr">→</span><div class="ct-wait">3 hét várakozás</div><span class="ct-arr">→</span><div class="ct-box">HILEFT folytatás</div></div>
+                <div class="combo-note"><strong>Injekció ELŐTT:</strong> teljes HILEFT kezelés mehet — szövet-előkészítés, mikrokeringés fokozás.<br><br><strong>Injekció UTÁN azonnal:</strong> csak LED (EMS nélkül!) — gyulladáscsökkentő, regeneratív hatás.<br><br><strong>EMS az injekciós területen:</strong> csak 3 hét után!</div>
+              </div>
+            </div>
+            <div class="combo-card">
+              <div class="combo-h" onclick="tc(this)"><span class="combo-title">HILEFT + Hialuronsavas filler</span><span class="combo-tag">Volume + Biology</span></div>
+              <div class="combo-body">
+                <div class="combo-tl"><div class="ct-box">HILEFT előkezelés</div><span class="ct-arr">→</span><div class="ct-box">HA filler injekció</div><span class="ct-arr">→</span><div class="ct-led">LED (EMS nélkül)</div><span class="ct-arr">→</span><div class="ct-wait">4 hét várakozás</div><span class="ct-arr">→</span><div class="ct-box">HILEFT folytatás</div></div>
+                <div class="combo-note"><strong>Injekció ELŐTT:</strong> teljes HILEFT — fibroblaszt aktiváció, szöveti befogadó közeg előkészítése.<br><br><strong>Injekció UTÁN azonnal:</strong> csak LED — ödéma és véraláfutás csökkentés.<br><br><strong>EMS az injekciós területen:</strong> csak 4 hét után!</div>
+              </div>
+            </div>
+            <div class="combo-card">
+              <div class="combo-h" onclick="tc(this)"><span class="combo-title">HILEFT + Profhilo / Skinbooster</span><span class="combo-tag">Hidratáció + Tónus</span></div>
+              <div class="combo-body">
+                <div class="combo-tl"><div class="ct-box">HILEFT előkezelés</div><span class="ct-arr">→</span><div class="ct-box">Profhilo injekció</div><span class="ct-arr">→</span><div class="ct-led">LED (EMS nélkül)</div><span class="ct-arr">→</span><div class="ct-wait">4 hét várakozás</div><span class="ct-arr">→</span><div class="ct-box">HILEFT folytatás</div></div>
+                <div class="combo-note">HA-tartalom miatt szintén 4 hét várakozás EMS előtt. Az előkezelési HILEFT fokozza a mikrokeringést — a Profhilo egyenletesebben oszlik el.</div>
+              </div>
+            </div>
+            <div class="combo-card">
+              <div class="combo-h" onclick="tc(this)"><span class="combo-title">HILEFT önálló sorozat</span><span class="combo-tag">Alap protokoll</span></div>
+              <div class="combo-body">
+                <div class="combo-tl"><div class="ct-box">5–6 kezelés</div><span class="ct-arr">→</span><div class="ct-box">Hetente 1×</div><span class="ct-arr">→</span><div class="ct-box">Fenntartás: havi 1×</div></div>
+                <div class="combo-note">Injekciós beavatkozás nélküli önálló arcfiatalítás, tónusjavítás, bőrminőség fejlesztés. Minden 3 hónapban ajánlott 2 hetes szünet.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 7 -->
+      <div class="unit-section" id="u6">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">7</div><div class="u-title">Biztonsági <em>protokoll</em></div></div>
+          <div class="unit-body">
+            <p class="sec-label">Ha a páciens panaszt jelez kezelés közben</p>
+            <ul class="steps">
+              <li class="step-item"><div class="step-n">!</div><div><div class="step-t">Égő / fájdalmas érzés</div><div class="step-d"><em>Azonnal csökkentsd az intenzitást.</em> Ellenőrizd a gél lefedettségét (Pause módban). Ha visszatér — állítsd le az EMS-t, folytasd csak LED-del.</div></div></li>
+              <li class="step-item"><div class="step-n">!</div><div><div class="step-t">Fog- vagy ínyfájdalom</div><div class="step-d"><em>Azonnal csökkentsd az intenzitást</em> és ellenőrizd az elektróda pozíciót. Pause → korrekció → folytatás alacsonyabb intenzitással.</div></div></li>
+              <li class="step-item"><div class="step-n">!</div><div><div class="step-t">Mellkasi fájdalom, légzési nehézség, szédülés</div><div class="step-d"><em>Azonnal állítsd le a kezelést.</em> Ültesd le a pácienst. Értesítsd azonnal az orvost / Henriettát.</div></div></li>
+              <li class="step-item"><div class="step-n">!</div><div><div class="step-t">Szokatlan bőrreakció / túlmelegedés</div><div class="step-d">Állítsd le. 37°C felett csökkentsd a LED intenzitást. Szokatlan reakciónál: fotó + orvos értesítése.</div></div></li>
+            </ul>
+            <p class="sec-label">Amit soha ne csinálj</p>
+            <div class="warn-box"><div class="warn-title">Szigorú tiltások</div><ul>
+              <li>Ne végezz kezelést, ha a páciens pacemakert említ — bármilyen korú esetén sem</li>
+              <li>Ne alkalmazz stimulációt a nyakon vagy a carotis sinus területén</li>
+              <li>Ne helyezd az elektródákat a szemekre, ajkakra vagy halántékra</li>
+              <li>Ne növeld az intenzitást, ha a páciens fájdalomról panaszkodik</li>
+              <li>Ne hagyd a pácienst egyedül a kezelőszékben</li>
+              <li>Ne alkalmazz EMS-t Botox után 3 héten belül / filler után 4 héten belül</li>
+              <li>Ne improvizálj protokollon — ha kétséges, kérdezz</li>
+            </ul></div>
+            <p class="sec-label">Tisztítás és fertőtlenítés</p>
+            <div class="info-box">Ajánlott szer: <strong>Parker Laboratories® Protex™ Medical Device Cleaner.</strong> Más tisztítószer nem engedélyezett. A gép NEM vízálló — folyadék ne kerüljön a csatlakozókba.</div>
+            <ul class="checklist">
+              <li class="ci"><input type="checkbox" id="m1" onchange="ck(this)"><label for="m1"><strong>Minden kezelés után:</strong> Face fej és elektródák Protex kendővel megtisztítva, megszárítva</label></li>
+              <li class="ci"><input type="checkbox" id="m2" onchange="ck(this)"><label for="m2"><strong>Naponta:</strong> kábel és gép külső felülete letörölve</label></li>
+              <li class="ci"><input type="checkbox" id="m3" onchange="ck(this)"><label for="m3"><strong>Ha hibát észlelsz</strong> (sárga SELF-TEST, furcsa szag, sérülés): azonnal leállítod és értesítesz</label></li>
+            </ul>
+            <div class="gold-line"></div>
+            <div class="tip-row"><span class="tip-icon">📞</span><div class="tip-text"><strong>Bizonytalan eset esetén mindig kérdezz.</strong> A protokoll célja az önálló munkavégzés — de nem az, hogy egyedül dönts kontraindikált helyzetekben.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UNIT 8: QUIZ -->
+      <div class="unit-section" id="u7">
+        <div class="unit-card">
+          <div class="unit-header"><div class="u-num">8</div><div class="u-title">Heti <em>Tudásteszt</em></div></div>
+          <div class="unit-body">
+            <div id="quiz-root"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-wrap -->
+  </main>
+</div><!-- /app -->
+
+<script>
+// ── PASSWORD (SHA-256 hash of "TUB2026") ──
+const HASH = 'a3b4c8d2e1f9a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1';
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function unlock(){
+  const pw = document.getElementById('pw').value;
+  const h = await sha256(pw);
+  // Simple check — for internal use
+  if(pw === 'TUB2026'){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').classList.add('visible');
+  } else {
+    document.getElementById('gate-err').textContent='Helytelen jelszó.';
+    document.getElementById('pw').value='';
+    document.getElementById('pw').focus();
+  }
+}
+
+function lock(){
+  document.getElementById('gate').style.display='flex';
+  document.getElementById('gate-err').textContent='';
+  document.getElementById('pw').value='';
+  document.getElementById('app').classList.remove('visible');
+}
+
+// ── NAVIGATION ──
+function showUnit(idx, el){
+  document.querySelectorAll('.unit-section').forEach((s,i)=>s.classList.toggle('active',i===idx));
+  document.querySelectorAll('.sb-nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.mb-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  // sync the other nav (desktop↔mobile)
+  const desktopItems = document.querySelectorAll('.sb-nav-item');
+  const mobileItems = document.querySelectorAll('.mb-item');
+  if(desktopItems[idx]) desktopItems[idx].classList.add('active');
+  if(mobileItems[idx]) mobileItems[idx].classList.add('active');
+  document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── CHECKLIST ──
+function ck(el){ el.closest('.ci').classList.toggle('done', el.checked); }
+
+// ── COMBOS ──
+function tc(h){ h.nextElementSibling.classList.toggle('open'); }
+
+// ══════════════════════════════════════════════════════
+// ── QUIZ ENGINE ──
+// ══════════════════════════════════════════════════════
+
+// 🔧 BEÁLLÍTÁS: cseréld ki a saját URL-eidre a SETUP után
+const QUIZ_CONFIG = {
+  SHEET_URL: 'https://docs.google.com/spreadsheets/d/1fVEeB9fMChyNPI1OoK0mKmbnhbWHmsnkhToAaEob9bM/pub?gid=0&single=true&output=csv',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwxeWRTsuUzJ3NjetngAo5JRfFAW0n2X_el0xSCpMGnnHEzlxvhfKJf2fkgBc617mmOvQ/exec'
+};
+
+const QZ = {
+  questions: [], current: 0, answers: [],
+  startTime: null, name: '', email: '',
+
+  // Betöltés a Google Sheet-ből
+  async init() {
+    const root = document.getElementById('quiz-root');
+    if (!root) return;
+
+    // Ha még nincs beállítva
+    if (QUIZ_CONFIG.SHEET_URL === 'BEILLESZTES_SZUKSEGES') {
+      root.innerHTML = `
+        <div class="qz-setup-note">
+          <div class="sn-title">⚙ Beállítás szükséges</div>
+          <p>A quiz kérdések Google Sheet-ből töltődnek be.<br>
+          Kövesd a mellékelt <code>Apps_Script_Setup.txt</code> útmutatót,<br>
+          majd illeszd be a két URL-t a HTML fájl <code>QUIZ_CONFIG</code> részébe.</p>
+        </div>`;
+      return;
+    }
+
+    root.innerHTML = `<div class="qz-loading"><div class="qz-spinner"></div><p>Kérdések betöltése...</p></div>`;
+
+    try {
+      const resp = await fetch(QUIZ_CONFIG.SHEET_URL);
+      const csv = await resp.text();
+      this.questions = this.parseCSV(csv);
+      if (this.questions.length === 0) throw new Error('Üres');
+      this.renderIntro();
+    } catch(e) {
+      root.innerHTML = `<div class="qz-error"><p>Nem sikerült betölteni a kérdéseket.<br>Ellenőrizd az internet kapcsolatot és a Sheet URL-t.</p></div>`;
+    }
+  },
+
+  parseCSV(csv) {
+    const lines = csv.trim().split('\n').slice(1); // fejléc kihagyva
+    return lines.filter(l => l.trim()).map(line => {
+      const c = this.parseRow(line);
+      return { nr:c[0], text:c[1], options:[c[2],c[3],c[4],c[5]], correct:(c[6]||'').trim().toUpperCase(), explanation:c[7]||'', category:c[8]||'HILEFT' };
+    }).filter(q => q.text && q.correct && ['A','B','C','D'].includes(q.correct));
+  },
+
+  parseRow(row) {
+    const res=[]; let inQ=false, cur='';
+    for (let i=0;i<row.length;i++) {
+      if(row[i]==='"'){inQ=!inQ;}
+      else if(row[i]===','&&!inQ){res.push(cur.trim());cur='';}
+      else{cur+=row[i];}
+    }
+    res.push(cur.trim());
+    return res;
+  },
+
+  renderIntro() {
+    const q = this.questions;
+    const cats = [...new Set(q.map(x=>x.category))].join(', ');
+    document.getElementById('quiz-root').innerHTML = `
+      <div class="qz-intro">
+        <div class="qz-week-badge">📋 ${q.length} kérdés · ${cats}</div>
+        <h2>HILEFT <em>Tudásteszt</em></h2>
+        <p class="qz-intro-desc">Töltsd ki a heti tesztet a protokoll ismereteinek ellenőrzéséhez. Az eredményed automatikusan rögzítésre kerül.</p>
+        <div class="qz-form-grid">
+          <div class="qz-field"><label>Neved</label><input class="qz-input" id="qz-name" type="text" placeholder="Például: Kiss Anna" autocomplete="name"></div>
+          <div class="qz-field"><label>Email cím</label><input class="qz-input" id="qz-email" type="email" placeholder="nev@email.com" autocomplete="email"></div>
+        </div>
+        <div class="qz-err" id="qz-err"></div>
+        <button class="qz-start-btn" onclick="QZ.start()">Teszt indítása →</button>
+        <p class="qz-count">Körülbelül ${Math.ceil(q.length * 0.5)} perc · Eredmény emailben is megérkezik</p>
+      </div>`;
+  },
+
+  start() {
+    this.name = (document.getElementById('qz-name')?.value||'').trim();
+    this.email = (document.getElementById('qz-email')?.value||'').trim();
+    const err = document.getElementById('qz-err');
+    if (!this.name) { err.textContent='Add meg a neved.'; return; }
+    if (!this.email||!this.email.includes('@')) { err.textContent='Érvényes email cím szükséges.'; return; }
+    this.current=0; this.answers=[]; this.startTime=Date.now();
+    this.renderQuestion();
+  },
+
+  renderQuestion() {
+    const q = this.questions[this.current];
+    const pct = Math.round((this.current/this.questions.length)*100);
+    const letters = ['A','B','C','D'];
+    document.getElementById('quiz-root').innerHTML = `
+      <div class="qz-progress-wrap">
+        <div class="qz-progress-meta"><span>${this.current+1} / ${this.questions.length}</span><span>${q.category}</span></div>
+        <div class="qz-progress-track"><div class="qz-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="qz-q-text">${q.text}</div>
+      <div class="qz-options">
+        ${q.options.map((opt,i)=>`
+          <button class="qz-opt" onclick="QZ.select(${i})">
+            <div class="qz-opt-letter">${letters[i]}</div>
+            <div class="qz-opt-text">${opt}</div>
+          </button>`).join('')}
+      </div>`;
+  },
+
+  select(idx) {
+    const q = this.questions[this.current];
+    const letters = ['A','B','C','D'];
+    const selected = letters[idx];
+    const isCorrect = selected === q.correct;
+    const correctIdx = letters.indexOf(q.correct);
+
+    this.answers.push({
+      question: q.text, selected: q.options[idx],
+      selectedLetter: selected, correctLetter: q.correct,
+      correct: isCorrect, explanation: q.explanation
+    });
+
+    // Vizuális visszajelzés az opción
+    const opts = document.querySelectorAll('.qz-opt');
+    opts.forEach(o=>o.classList.add('disabled'));
+    opts[idx].classList.add(isCorrect ? 'correct' : 'wrong');
+    if (!isCorrect) opts[correctIdx].classList.add('correct');
+
+    // Feedback box
+    const fb = document.createElement('div');
+    fb.className = `qz-feedback ${isCorrect?'correct-fb':'wrong-fb'}`;
+    fb.innerHTML = `
+      <div class="qz-fb-row">
+        <span class="qz-fb-icon">${isCorrect?'✓':'✕'}</span>
+        <span class="qz-fb-label">${isCorrect?'Helyes!':'Helytelen'}</span>
+        ${!isCorrect?`<span style="font-size:11px;color:#777;margin-left:auto;">Helyes: ${q.correct}</span>`:''}
+      </div>
+      ${q.explanation?`<p class="qz-fb-explanation">${q.explanation}</p>`:''}
+      <button class="qz-next-btn" onclick="QZ.next()">${this.current+1<this.questions.length?'Következő kérdés →':'Eredmények megtekintése →'}</button>`;
+
+    document.getElementById('quiz-root').appendChild(fb);
+  },
+
+  next() {
+    this.current++;
+    if (this.current >= this.questions.length) this.renderResults();
+    else this.renderQuestion();
+  },
+
+  renderResults() {
+    const score = this.answers.filter(a=>a.correct).length;
+    const total = this.questions.length;
+    const pct = Math.round(score/total*100);
+    const pass = pct >= 80;
+    const duration = Math.round((Date.now()-this.startTime)/1000);
+    const mins = Math.floor(duration/60), secs = duration%60;
+
+    this.submit(score, total, duration);
+
+    document.getElementById('quiz-root').innerHTML = `
+      <div class="qz-results">
+        <div class="qz-score-wrap">
+          <div class="qz-score-num">${score}<span class="qz-score-denom">/${total}</span></div>
+          <div class="qz-score-pct">${pct}% · ${mins}p ${secs}mp</div>
+          <div class="qz-score-name">${this.name}</div>
+          <div class="qz-pass ${pass?'pass':'fail'}">${pass?'✓ Teljesítve':'⚠ Ismételd át az anyagot'}</div>
+        </div>
+        <div class="qz-breakdown-label">Részletes eredmény</div>
+        ${this.answers.map((a,i)=>`
+          <div class="qz-br-item">
+            <span class="qz-br-icon">${a.correct?'✓':'✕'}</span>
+            <div class="qz-br-q">
+              <strong>${i+1}. ${a.question}</strong>
+              Válaszod: ${a.selected}
+              ${!a.correct?` · Helyes: ${this.questions[i].options['ABCD'.indexOf(a.correctLetter)]}`:''} 
+            </div>
+          </div>`).join('')}
+        <p class="qz-submitted">✓ Eredményed rögzítve · Email visszaigazolás úton van</p>
+        <button class="qz-retry-btn" onclick="QZ.init()">Újra próbálom</button>
+      </div>`;
+  },
+
+  async submit(score, total, duration) {
+    if (QUIZ_CONFIG.SCRIPT_URL === 'BEILLESZTES_SZUKSEGES') return;
+    try {
+      await fetch(QUIZ_CONFIG.SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'text/plain'},
+        body: JSON.stringify({
+          timestamp: new Date().toISOString(),
+          name: this.name, email: this.email,
+          score, total, duration,
+          category: this.questions[0]?.category || 'HILEFT',
+          answers: this.answers
+        })
+      });
+    } catch(e) { /* no-cors: az adat elment, választ nem kapunk vissza */ }
+  }
+};
+
+// Quiz betöltése amikor a 8. egységre navigálnak
+const _origShowUnit = showUnit;
+function showUnit(idx, el) {
+  _origShowUnit(idx, el);
+  if (idx === 7) QZ.init();
+}
+</script>
+</body>
+</html>

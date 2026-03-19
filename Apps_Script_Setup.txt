@@ -1,0 +1,224 @@
+═══════════════════════════════════════════════════════════════
+THE ULTIMATE BEAUTY — QUIZ RENDSZER BEÁLLÍTÁSA
+Google Apps Script + Google Sheets
+═══════════════════════════════════════════════════════════════
+
+LÉPÉS 1: GOOGLE SHEET LÉTREHOZÁSA
+───────────────────────────────────
+1. Nyisd meg: sheets.google.com
+2. Hozz létre egy új táblázatot: "TUB Quiz Rendszer"
+3. Az alsó lapon kattints jobbklikk → "Átnevezés" → "Kérdések"
+4. Adj hozzá egy második lapot: "Eredmények"
+
+LÉPÉS 2: KÉRDÉSEK KITÖLTÉSE (Kérdések lap)
+────────────────────────────────────────────
+Az első sorba írd be ezeket a fejléceket (A1-tól I1-ig):
+Nr | Kérdés | A | B | C | D | Helyes | Magyarázat | Kategória
+
+A "Helyes" oszlopba csak egyetlen betűt írj: A, B, C, vagy D
+
+MINTA KÉRDÉSEK (másold be a 2. sortól):
+─────────────────────────────────────────
+Nr | Kérdés | A | B | C | D | Helyes | Magyarázat | Kategória
+1 | Mit jelent a HILEFT rövidítés? | High Intensity LED Face Treatment | High Intensity Light and Electro Facial Therapy | Hybrid Infrared LED Face Technology | High Impact Laser and Electro Facial Treatment | B | HILEFT = High Intensity Light and Electro Facial Therapy | HILEFT
+2 | Melyik hullámhossz(ok) jellemzik a Face applicátor LED fényét? | 415 nm és 630 nm | 395 nm, 520 nm és 640 nm | 730 nm és 940 nm | 660 nm, 730 nm és 940 nm | C | A Face fej csak 2 hullámhosszat alkalmaz: 730 nm (mély vörös) és 940 nm (közel-infravörös) | HILEFT
+3 | Mikor kapcsolható be a LED fény kezelés közben? | A páciens belépésekor | Gél felvitele előtt | A CAUTION képernyő elfogadása után | Csak a program elindítása (Start gomb) után | D | A LED fény az eszközön csak aktív program közben érhető el — Start gomb megnyomása után. | HILEFT
+4 | Mi a következménye, ha nincs elegendő kondukciós gél az elektróda alatt? | Csökkent LED hatás | Égési érzés a páciensnek | Gyengébb izomstimulációi | Nem tölt be a program | B | A gél vezető közegként szolgál — hiánya vagy egyenetlen felvitele égési érzést okozhat. | HILEFT
+5 | Melyik kontraindikáció esetén TILOS az EMS alkalmazása? | Fényérzékenység | Aktív pacemaker vagy beültetett elektronikus eszköz | Melasma | Száraz bőr | B | Beültetett elektronikus eszköz esetén az EMS életveszélyes lehet — ez abszolút kontraindikáció. | HILEFT
+6 | Botox injekció után mennyi ideig kell várni az EMS alkalmazásával az érintett területen? | 1 hét | 2 hét | 3 hét | 4 hét | C | A gyártó előírása: Botox után 3 hét várakozás szükséges az EMS kezelés előtt az injekciós területen. | Kombinációk
+7 | Hialuronsavas filler injekció után mennyi várakozási idő szükséges az EMS alkalmazása előtt? | 2 hét | 3 hét | 4 hét | 6 hét | C | Dermal filler esetén 4 hetes várakozás szükséges az EMS alkalmazása előtt a kezelt területen. | Kombinációk
+8 | Mi a maximális kezelési idő egy alkalommal? | 20 perc | 25 perc | 30 perc | 45 perc | C | Az eszköz kézikönyve szerint: egy területet maximum 30 percig szabad stimulálni. | Kezelés
+9 | Milyen kezdő LED intenzitással kell indítani a kezelést? | 20–30% | 30–40% | 50–60% | 70–80% | C | A kézikönyv szerint: LED-et 50–60%-os intenzitással kell beállítani a kezelés elején. | Kezelés
+10 | Melyik izmot érintik a 3–4 csatorna elektródái a Face applicátoron? | m. frontalis | m. masseter | m. buccinator | m. zygomaticus | C | A Face fej csatorna-kiosztása: 1–2 = m. frontalis (homlok), 3–4 = m. buccinator (orca), 5–6 = m. masseter (rágóizom). | A gép
+───────────────────────────────────────────────────────────────
+Új kérdéscsoportot adj hozzá az 1. után, az előző kérdések alá.
+A "Kategória" oszlopban jelöld a témakört (pl. HILEFT, Kombinációk, A gép, Biztonsági protokoll stb.)
+
+LÉPÉS 3: SHEET PUBLIKÁLÁSA CSV-KÉNT
+──────────────────────────────────────
+1. Fájl → Megosztás → Közzététel a weben
+2. Válaszd ki: "Kérdések" lap → "Vesszővel elválasztott értékek (.csv)"
+3. Kattints: "Közzétesz"
+4. Másold ki a kapott linket — ez lesz a SHEET_URL
+
+LÉPÉS 4: APPS SCRIPT LÉTREHOZÁSA
+───────────────────────────────────
+1. A Sheet-ben: Bővítmények → Apps Script
+2. Töröld az alapértelmezett kódot
+3. Illeszd be az alábbi kódot:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// APPS SCRIPT KÓD — másold be a teljes részt
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const NOTIFY_EMAIL = 'info@theultimatebeauty.net';
+const RESULTS_SHEET = 'Eredmények';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    saveResults(data);
+    sendEmails(data);
+    return ContentService
+      .createTextOutput(JSON.stringify({success: true}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({success: false, error: err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  // GET kérésnél is elfogadjuk (fallback)
+  return ContentService
+    .createTextOutput(JSON.stringify({status: 'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function saveResults(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(RESULTS_SHEET);
+  
+  if (!sheet) {
+    sheet = ss.insertSheet(RESULTS_SHEET);
+    sheet.appendRow([
+      'Időpont', 'Név', 'Email', 'Pontszám', 'Max', '%', 
+      'Kitöltési idő (mp)', 'Témakör', 'Részletes eredmények'
+    ]);
+    sheet.getRange(1,1,1,9).setFontWeight('bold');
+  }
+  
+  const pct = Math.round(data.score / data.total * 100);
+  sheet.appendRow([
+    new Date(data.timestamp),
+    data.name,
+    data.email,
+    data.score,
+    data.total,
+    pct + '%',
+    data.duration,
+    data.category,
+    JSON.stringify(data.answers)
+  ]);
+}
+
+function sendEmails(data) {
+  const pct = Math.round(data.score / data.total * 100);
+  const dt = new Date(data.timestamp).toLocaleString('hu-HU', {timeZone: 'Europe/Budapest'});
+  const mins = Math.floor(data.duration / 60);
+  const secs = data.duration % 60;
+  const pass = pct >= 80;
+  
+  // Részletes válaszok szövegként
+  const breakdown = data.answers.map((a, i) => 
+    `  ${i+1}. ${a.question}\n     → ${a.selected} ${a.correct ? '✓' : '✗ (Helyes: ' + a.correctLetter + ')'}`
+  ).join('\n');
+  
+  // ── Email a klinikának ──
+  const adminSubject = `TUB Quiz: ${data.name} — ${data.score}/${data.total} (${pct}%) · ${dt}`;
+  const adminBody = `Új tesztkitöltés érkezett a HILEFT oktatási rendszerből.
+
+Kitöltő: ${data.name}
+Email: ${data.email}
+Eredmény: ${data.score}/${data.total} — ${pct}% ${pass ? '✓ MEGFELELT' : '✗ NEM FELELT MEG'}
+Kitöltési idő: ${mins} perc ${secs} másodperc
+Időpont: ${dt}
+Témakör: ${data.category}
+
+RÉSZLETES VÁLASZOK:
+${breakdown}
+
+──────────────────────────────
+The Ultimate Beauty — Belső oktatási rendszer`;
+
+  MailApp.sendEmail(NOTIFY_EMAIL, adminSubject, adminBody);
+  
+  // ── Visszaigazoló email a kitöltőnek ──
+  const userSubject = `HILEFT Tudásteszt — Eredményed: ${data.score}/${data.total} (${pct}%)`;
+  const userBody = `Kedves ${data.name}!
+
+Sikeresen kitöltötted a The Ultimate Beauty HILEFT protokoll tudástesztet.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+EREDMÉNYED: ${data.score}/${data.total} — ${pct}%
+${pass 
+  ? '✓ GRATULÁLUNK! Sikeresen teljesítetted a tesztet.' 
+  : '⚠  Az eredmény 80% alatt van. Javasoljuk az anyag újraolvasását.'}
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+Kitöltési idő: ${mins} perc ${secs} másodperc
+Dátum: ${dt}
+
+${pass 
+  ? 'Köszönjük a lelkiismeretes felkészülést!'
+  : 'Ne csüggedj — olvasd át az anyagot és próbáld újra!'}
+
+──────────────────────────────
+The Ultimate Beauty Boutique Clinic
+1124 Budapest, Gyöngyvirág út 68.
+info@theultimatebeauty.net`;
+
+  try {
+    MailApp.sendEmail(data.email, userSubject, userBody);
+  } catch(e) {
+    // Ha érvénytelen email, csak loggoljuk
+    Logger.log('Email küldési hiba: ' + e.toString());
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// KÉSZ — a kód vége
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LÉPÉS 5: WEB APP TELEPÍTÉSE
+──────────────────────────────
+1. Apps Script szerkesztőben: Telepítés → Új telepítés
+2. Típus: Web-alkalmazás
+3. Leírás: TUB Quiz v1
+4. Végrehajtás: Én magam (saját fiókod)
+5. Hozzáférés: Mindenki
+6. Kattints: Telepítés
+7. Engedélyezd a jogosultságokat (Google fiókod kéri)
+8. Másold ki a "Web app URL" linket — ez lesz a SCRIPT_URL
+
+LÉPÉS 6: URL-EK BEILLESZTÉSE A HTML FÁJLBA
+─────────────────────────────────────────────
+Nyisd meg a HILEFT_kezelesi_protokoll_TUB_v2.html fájlt
+szövegszerkesztővel (Notepad++, VS Code, stb.)
+
+Keresd meg ezt a részt (kb. a fájl végén):
+  const QUIZ_CONFIG = {
+    SHEET_URL: 'BEILLESZTES_SZUKSEGES',
+    SCRIPT_URL: 'BEILLESZTES_SZUKSEGES'
+  };
+
+Cseréld ki a két 'BEILLESZTES_SZUKSEGES' szöveget
+a saját URL-eidre (az idézőjeleken belül):
+  const QUIZ_CONFIG = {
+    SHEET_URL: 'https://docs.google.com/spreadsheets/d/.../pub?...',
+    SCRIPT_URL: 'https://script.google.com/macros/s/.../exec'
+  };
+
+Mentsd el a fájlt. Kész!
+
+═══════════════════════════════════════════════════════════════
+HETI ÚJ KÉRDÉSCSOPORTOK HOZZÁADÁSA
+═══════════════════════════════════════════════════════════════
+1. Nyisd meg a Google Sheet "Kérdések" lapját
+2. Add hozzá az új kérdéseket az előző kérdések alá
+3. A "Kategória" oszlopban jelöld az új témakört (pl. "Iontoforézis")
+4. Mentés — a quiz automatikusan frissül, nem kell módosítani a HTML-t!
+
+EREDMÉNYEK MEGTEKINTÉSE:
+Az "Eredmények" lapon minden kitöltés automatikusan megjelenik.
+Minden sor: időpont, név, email, pontszám, %, kitöltési idő, témakör.
+Szűrni tudsz dátum, név vagy pontszám szerint.
+
+TESZTELÉS:
+Az Apps Script szerkesztőjében kattints a "Futtatás" → "doPost" gombra
+egy tesztadat küldéséhez, hogy ellenőrizd a Sheet és email működését.
+
+═══════════════════════════════════════════════════════════════
+KÉRDÉS? info@theultimatebeauty.net
+═══════════════════════════════════════════════════════════════

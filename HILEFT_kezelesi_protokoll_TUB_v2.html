@@ -870,6 +870,8 @@ function showUnit(idx, el){
   if(mobileItems[idx]) mobileItems[idx].classList.add('active');
   document.querySelector('.main').scrollTo({top:0,behavior:'smooth'});
   window.scrollTo({top:0,behavior:'smooth'});
+  // Quiz betöltése a 8. egységnél
+  if(idx === 7 && typeof QZ !== 'undefined') QZ.init();
 }
 
 // ── CHECKLIST ──
@@ -1080,12 +1082,7 @@ const QZ = {
   }
 };
 
-// Quiz betöltése amikor a 8. egységre navigálnak
-const _origShowUnit = showUnit;
-function showUnit(idx, el) {
-  _origShowUnit(idx, el);
-  if (idx === 7) QZ.init();
-}
+// Quiz init a showUnit-ba integrálva (lásd fent)
 </script>
 </body>
 </html>

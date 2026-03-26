@@ -1439,16 +1439,16 @@ body{font-family:'Montserrat',system-ui,sans-serif;color:var(--ivory);}
 
       <!-- HERO CTA BUTTONS -->
       <div class="hero-cta-row">
-        <button class="hero-cta-btn cta-compass" onclick="showUnit(7,document.querySelector('.sb-nav-item[onclick*=showUnit(7]')); window.scrollTo(0,0);">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M22 12H2M12 7l-2.5 1.5L12 12l2.5-1.5L12 7Z"/><path d="M12 12l2.5 1.5L12 17l-2.5-1.5L12 12Z"/></svg>
+        <button class="hero-cta-btn cta-compass" onclick="heroCta(7)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><polygon points="14.5,9.5 9.5,14.5 12,12"/><polygon points="9.5,14.5 14.5,9.5 12,12"/><path d="M16.24 7.76l-2.12 2.12M9.88 14.12l-2.12 2.12"/></svg>
           Kezelési iránytű
         </button>
-        <button class="hero-cta-btn cta-guide" onclick="showUnit(8,document.querySelector('.sb-nav-item[onclick*=showUnit(8]')); window.scrollTo(0,0);">
-          <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/></svg>
+        <button class="hero-cta-btn cta-guide" onclick="heroCta(8)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
           Program útmutató
         </button>
-        <button class="hero-cta-btn cta-quiz" onclick="showUnit(9,document.querySelector('.sb-nav-item[onclick*=showUnit(9]')); window.scrollTo(0,0);">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4M11 20H4a2 2 0 01-2-2V6a2 2 0 012-2h16a2 2 0 012 2v10"/></svg>
+        <button class="hero-cta-btn cta-quiz" onclick="heroCta(9)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           Heti Quiz
         </button>
       </div>
@@ -4080,6 +4080,11 @@ document.getElementById('readModal')?.addEventListener('click', e => {
 });
 
 // ── NAVIGATION ──
+function heroCta(idx){
+  var items = document.querySelectorAll('.sb-nav-item');
+  showUnit(idx, items[idx] || null);
+}
+
 function showUnit(idx, el){
   document.querySelectorAll('.unit-section').forEach((s,i)=>s.classList.toggle('active',i===idx));
   document.querySelectorAll('.sb-nav-item').forEach((n,i)=>{n.classList.remove('active');n.dataset.idx=i;});
